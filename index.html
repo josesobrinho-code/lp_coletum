@@ -12,10 +12,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Coletum — Sua testemunha em campo</title>
 <meta name="description" content="O Coletum registra localização, data e hora automaticamente, e permite anexar foto e assinatura a cada preenchimento, mesmo sem internet." />
+<link rel="icon" href="assets/simbolo%20logo.svg" type="image/svg+xml" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=K2D:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="css/styles.css?v=22" />
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=K2D:wght@600;700&amp;family=Inter:wght@400;600;700&amp;display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=K2D:wght@600;700&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=K2D:wght@600;700&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet" /></noscript>
+<link rel="preload" as="image" href="assets/video/hero-poster.webp" media="(min-width: 768px)" fetchpriority="high" />
+<link rel="preload" as="image" href="assets/video/hero-mobile-poster.webp" media="(max-width: 767px)" fetchpriority="high" />
+<link rel="stylesheet" href="css/styles.css?v=23" />
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -40,17 +45,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <section class="hero">
     <video
       class="hero-bg-video"
-      poster="assets/video/hero-poster.jpg"
-      autoplay
       muted
       loop
       playsinline
+      preload="none"
+      data-desktop-src="assets/video/hero-globe.mp4"
+      data-mobile-src="assets/video/hero-mobile.mp4"
       disablepictureinpicture
       aria-hidden="true"
-    >
-      <source src="assets/video/hero-mobile.mp4" media="(max-width: 767px)" type="video/mp4" />
-      <source src="assets/video/hero-globe.mp4" type="video/mp4" />
-    </video>
+    ></video>
     <div class="hero-bg-overlay"></div>
 
     <div class="container">
@@ -294,7 +297,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <p>Equipes de supervisão registram pavimento, sinalização e conformidade em trechos sem sinal, e o dado sincroniza assim que a equipe encontra conexão, já georreferenciado. Clientes como RTA usam o Coletum há anos para sustentar contratos com órgãos&nbsp;públicos.</p>
           </div>
           <div class="segment-image">
-            <img src="assets/img/segmento-rodovia.jpg" alt="Equipe de engenharia fazendo fiscalização em rodovia" />
+            <img src="assets/img/segmento-rodovia.webp" width="540" height="360" loading="lazy" decoding="async" alt="Equipe de engenharia fazendo fiscalização em rodovia" />
           </div>
         </article>
 
@@ -304,7 +307,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <p>Técnicos visitam propriedades rurais, registram diagnóstico e orientação, muitas vezes em áreas sem cobertura. O programa BAHIATER opera com mais de 100 organizações&nbsp;simultâneas.</p>
           </div>
           <div class="segment-image">
-            <img src="assets/img/segmento-rural.jpg" alt="Técnico realizando assistência técnica em propriedade rural" />
+            <img src="assets/img/segmento-rural.webp" width="565" height="360" loading="lazy" decoding="async" alt="Técnico realizando assistência técnica em propriedade rural" />
           </div>
         </article>
 
@@ -314,7 +317,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <p>Equipes de campo coletam dados exigidos por órgãos como IBAMA e IPHAN — fauna, flora, sítios arqueológicos — com coordenadas e evidência fotográfica registradas no preenchimento. Consultorias como JGP usam o Coletum há mais de 7&nbsp;anos.</p>
           </div>
           <div class="segment-image">
-            <img src="assets/img/segmento-ambiental.jpg" alt="Equipe de campo coletando dados ambientais em área de mata" />
+            <img src="assets/img/segmento-ambiental.webp" width="704" height="384" loading="lazy" decoding="async" alt="Equipe de campo coletando dados ambientais em área de mata" />
           </div>
         </article>
 
@@ -324,7 +327,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <p>Checklists de conformidade aplicados em obras, terminais portuários e redes de energia, com evidência fotográfica georreferenciada anexada a cada item. Empresas como a Arteris adotaram o Coletum primeiro pelo compliance de segurança e seguem usando até&nbsp;hoje.</p>
           </div>
           <div class="segment-image segment-image--left">
-            <img src="assets/img/segmento-seguranca.jpg" alt="Inspetora de segurança do trabalho revisando checklist em obra" />
+            <img src="assets/img/segmento-seguranca.webp" width="800" height="534" loading="lazy" decoding="async" alt="Inspetora de segurança do trabalho revisando checklist em obra" />
           </div>
         </article>
       </div>
@@ -567,6 +570,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </footer>
 
-<script src="js/main.js?v=10"></script>
+<script src="js/main.js?v=11" defer></script>
 </body>
 </html>

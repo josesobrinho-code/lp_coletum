@@ -62,24 +62,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   if (!canHover) return;
 
-  const SPACING = 30;
+  const SPACING = 36;
   const REPEL_RADIUS = 85;
   const MAX_OFFSET = 9;
 
   let dots = [];
-  let fieldRect = null;
+  let rows = 0;
+  let cols = 0;
+  let activeDots = new Set();
   let pointer = { x: -9999, y: -9999 };
   let ticking = false;
+  let activated = false;
 
   function buildGrid() {
     field.innerHTML = "";
     dots = [];
-    fieldRect = field.getBoundingClientRect();
-    const cols = Math.ceil(fieldRect.width / SPACING) + 1;
-    const rows = Math.ceil(fieldRect.height / SPACING) + 1;
+    activeDots.clear();
+    const fieldRect = field.getBoundingClientRect();
+    cols = Math.ceil(fieldRect.width / SPACING) + 1;
+    rows = Math.ceil(fieldRect.height / SPACING) + 1;
     const frag = document.createDocumentFragment();
 
     for (let r = 0; r < rows; r++) {
+      const row = [];
       for (let c = 0; c < cols; c++) {
         const dot = document.createElement("span");
         const x = c * SPACING;
@@ -87,27 +92,41 @@ document.addEventListener("DOMContentLoaded", () => {
         dot.style.left = x + "px";
         dot.style.top = y + "px";
         frag.appendChild(dot);
-        dots.push({ el: dot, x, y });
+        row.push({ el: dot, x, y });
       }
+      dots.push(row);
     }
     field.appendChild(frag);
   }
 
   function update() {
     ticking = false;
-    for (const dot of dots) {
-      const dx = dot.x - pointer.x;
-      const dy = dot.y - pointer.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+    activeDots.forEach((dot) => {
+      dot.el.style.transform = "translate(-50%, -50%)";
+    });
+    activeDots.clear();
 
-      if (dist < REPEL_RADIUS) {
-        const force = (1 - dist / REPEL_RADIUS) * MAX_OFFSET;
-        const angle = Math.atan2(dy, dx);
-        const ox = Math.cos(angle) * force;
-        const oy = Math.sin(angle) * force;
-        dot.el.style.transform = `translate(calc(-50% + ${ox}px), calc(-50% + ${oy}px))`;
-      } else {
-        dot.el.style.transform = "translate(-50%, -50%)";
+    const minCol = Math.max(0, Math.floor((pointer.x - REPEL_RADIUS) / SPACING));
+    const maxCol = Math.min(cols - 1, Math.ceil((pointer.x + REPEL_RADIUS) / SPACING));
+    const minRow = Math.max(0, Math.floor((pointer.y - REPEL_RADIUS) / SPACING));
+    const maxRow = Math.min(rows - 1, Math.ceil((pointer.y + REPEL_RADIUS) / SPACING));
+
+    for (let r = minRow; r <= maxRow; r++) {
+      for (let c = minCol; c <= maxCol; c++) {
+        const dot = dots[r]?.[c];
+        if (!dot) continue;
+        const dx = dot.x - pointer.x;
+        const dy = dot.y - pointer.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist < REPEL_RADIUS) {
+          const force = (1 - dist / REPEL_RADIUS) * MAX_OFFSET;
+          const angle = Math.atan2(dy, dx);
+          const ox = Math.cos(angle) * force;
+          const oy = Math.sin(angle) * force;
+          dot.el.style.transform = `translate(calc(-50% + ${ox}px), calc(-50% + ${oy}px))`;
+          activeDots.add(dot);
+        }
       }
     }
   }
@@ -117,6 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // A posição do field é recalculada a cada movimento: getBoundingClientRect()
   // é relativa à viewport, então rolar a página invalida um valor em cache.
   section.addEventListener("mousemove", (e) => {
+    if (!activated) return;
     const liveRect = field.getBoundingClientRect();
     pointer.x = e.clientX - liveRect.left;
     pointer.y = e.clientY - liveRect.top;
@@ -127,59 +147,60 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   section.addEventListener("mouseleave", () => {
+    if (!activated) return;
     pointer.x = -9999;
     pointer.y = -9999;
     requestAnimationFrame(update);
   });
 
-  buildGrid();
-  field.classList.add("dot-field--active");
+  function activate() {
+    if (activated) return;
+    activated = true;
+    buildGrid();
+    field.classList.add("dot-field--active");
 
-  let resizeTimer;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(buildGrid, 200);
-  });
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(buildGrid, 200);
+    }, { passive: true });
+  }
+
+  const activationObserver = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return;
+    activate();
+    activationObserver.disconnect();
+  }, { rootMargin: "400px 0px" });
+
+  activationObserver.observe(section);
 });
 
-// Garante a fonte certa do vídeo do hero via JS: o atributo media do <source>
-// não é respeitado de forma confiável em todo navegador mobile (Safari/iOS em
-// especial), o que fazia o celular carregar o vídeo pesado de desktop.
+// Mostra primeiro o poster leve e só baixa o vídeo quando o navegador estiver
+// ocioso. Economia de dados e movimento reduzido permanecem somente no poster.
 document.addEventListener("DOMContentLoaded", () => {
   const video = document.querySelector(".hero-bg-video");
   if (!video) return;
 
-  const isMobile = window.matchMedia("(max-width: 767px)").matches;
-  const src = isMobile ? "assets/video/hero-mobile.mp4" : "assets/video/hero-globe.mp4";
-  const poster = isMobile ? "assets/video/hero-mobile-poster.jpg" : "assets/video/hero-poster.jpg";
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const saveData = navigator.connection?.saveData;
+  if (prefersReducedMotion || saveData) return;
 
-  video.poster = poster;
-  video.querySelectorAll("source").forEach((s) => s.remove());
-  const source = document.createElement("source");
-  source.type = "video/mp4";
-  source.src = src;
-  video.appendChild(source);
-  video.load();
-  video.play().catch(() => {});
-});
+  const loadVideo = () => {
+    if (video.src) return;
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    video.addEventListener("canplay", () => {
+      video.classList.add("is-ready");
+      video.play().catch(() => {});
+    }, { once: true });
+    video.src = isMobile ? video.dataset.mobileSrc : video.dataset.desktopSrc;
+    video.load();
+  };
 
-// Vídeo de fundo do hero: dissolve suavemente perto do corte do loop,
-// pra mascarar o corte seco e parecer um loop contínuo.
-document.addEventListener("DOMContentLoaded", () => {
-  const video = document.querySelector(".hero-bg-video");
-  if (!video) return;
-
-  const FADE = 0.6; // segundos de dissolução em cada ponta
-  const MAX_OPACITY = 0.2; // vídeo bem discreto, pra não brigar com o texto
-
-  video.addEventListener("timeupdate", () => {
-    const duration = video.duration;
-    if (!duration || Number.isNaN(duration)) return;
-
-    const distFromEdge = Math.min(video.currentTime, duration - video.currentTime);
-    const fade = distFromEdge >= FADE ? 1 : Math.max(distFromEdge / FADE, 0);
-    video.style.opacity = (fade * MAX_OPACITY).toFixed(3);
-  });
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(loadVideo, { timeout: 2000 });
+  } else {
+    window.setTimeout(loadVideo, 800);
+  }
 });
 
 // FAQ accordion: mantém só um item aberto por vez
